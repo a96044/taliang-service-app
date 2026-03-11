@@ -115,7 +115,7 @@ else:
         st.session_state.logged_in = False
         st.rerun()
 
-    if menu == "🔍 履歷查詢":
+if menu == "🔍 履歷查詢":
         st.title("⚙️ 維修紀錄檢索")
         q = st.text_input("🔍 輸入關鍵字搜尋 (如：客戶名稱、機台號碼、故障內容)")
         
@@ -123,37 +123,38 @@ else:
             df = load_data(SHEET_RECORDS)
             
         if not df.empty:
-            # 搜尋邏輯：全文檢索
             disp_df = df[df.apply(lambda r: r.astype(str).str.contains(q).any(), axis=1)] if q else df
+            st.write(f"📊 找到 {len(disp_df)} 筆相關紀錄")
             
-            # --- 修改「履歷查詢」中的 SOP 連結部分 ---
-st.write("**📄 相關 SOP 連結：**")
-sop_data = str(r['SOP列表']).strip()
-
-if sop_data and sop_data != "nan":
-    links = sop_data.split(";")
-    # 使用 columns 讓按鈕在手機上不會太擠
-    link_cols = st.columns(2)  # 手機建議用 2 欄就好
-    for idx, item in enumerate(links):
-        item = item.strip()
-        if "|" in item:
-            l_name, l_url = item.split("|", 1)
-        else:
-            l_name, l_url = "開啟 SOP", item
-        
-        # --- 核心優化：確保網址包含 http，否則手機會判斷為無效連結 ---
-        l_url = l_url.strip()
-        if not (l_url.startswith("http://") or l_url.startswith("https://")):
-            l_url = "https://" + l_url
-            
-        with link_cols[idx % 2]:
-            # 使用 st.link_button，這是 Streamlit 官方最穩定的手機跳轉方式
-            st.link_button(f"📖 {l_name}", l_url, use_container_width=True)
-else:
-    st.write("目前無相關連結")
+            for i, r in disp_df.iterrows():
+                with st.expander(f"【{r['客戶名稱']}】{r['機台號碼']} | {r['故障類型']} - {r['紀錄日期']}"):
+                    col_a, col_b = st.columns(2)
+                    col_a.write(f"**異常原因：**\n{r['異常原因']}")
+                    col_b.write(f"**排除方式：**\n{r['排除方式']}")
+                    
+                    st.divider()
+                    st.write("**📄 相關 SOP 連結：**")
+                    sop_data = str(r['SOP列表']).strip()
+                    if sop_data and sop_data != "nan":
+                        links = sop_data.split(";")
+                        link_cols = st.columns(2)
+                        for idx, item in enumerate(links):
+                            item = item.strip()
+                            l_name, l_url = item.split("|", 1) if "|" in item else ("開啟 SOP", item)
+                            
+                            # 修正網址格式，確保手機可以點擊
+                            l_url = l_url.strip()
+                            if l_url and not (l_url.startswith("http://") or l_url.startswith("https://")):
+                                l_url = "https://" + l_url
+                            
+                            with link_cols[idx % 2]:
+                                st.link_button(f"📖 {l_name}", l_url, use_container_width=True)
+                    else:
+                        st.write("目前無相關連結")
 
     elif menu == "📝 新增維修回報":
         st.title("📝 新增維修履歷")
+        # ... 後面維持不變 ...
         with st.form("add_form", clear_on_submit=True):
             c1, c2, c3 = st.columns(3)
             c_name = c1.text_input("客戶名稱 *")
@@ -191,5 +192,6 @@ else:
                             st.success("🎉 資料同步成功！已更新至雲端資料庫。")
                 else:
                     st.error("❌ 提交失敗：『客戶名稱』與『機台號碼』不可為空。")
+
 
 
