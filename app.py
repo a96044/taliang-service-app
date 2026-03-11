@@ -10,18 +10,19 @@ def get_gspread_client():
     try:
         scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
         
-        # 優先檢查 Streamlit Cloud 的 Secrets 設定 (雲端環境用)
+        # 雲端環境：嘗試讀取 Secrets
         if "gspread_creds" in st.secrets:
-            creds_dict = json.loads(st.secrets["gspread_creds"])
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        # 如果沒有 Secrets，就讀取本地 JSON 檔 (電腦測試用)
+            creds_info = json.loads(st.secrets["gspread_creds"])
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope)
+        # 本地環境：讀取檔案
         else:
             creds = ServiceAccountCredentials.from_json_keyfile_name("a96044-35b70c947e1b.json", scope)
             
         client = gspread.authorize(creds)
         return client
     except Exception as e:
-        st.error(f"⚠️ 連線初始化失敗：{e}")
+        # 這裡會印出你畫面上看到的紅字
+        st.error(f"連線初始化失敗：{e}")
         return None
 
 # 初始化試算表物件
@@ -185,3 +186,4 @@ else:
                             st.success("🎉 資料同步成功！已更新至雲端資料庫。")
                 else:
                     st.error("❌ 提交失敗：『客戶名稱』與『機台號碼』不可為空。")
+
