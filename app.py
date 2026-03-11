@@ -115,7 +115,8 @@ else:
         st.session_state.logged_in = False
         st.rerun()
 
-if menu == "🔍 履歷查詢":
+    # --- 重點：下面的 if 和 elif 必須縮排在 else 裡面，且垂直對齊 ---
+    if menu == "🔍 履歷查詢":
         st.title("⚙️ 維修紀錄檢索")
         q = st.text_input("🔍 輸入關鍵字搜尋 (如：客戶名稱、機台號碼、故障內容)")
         
@@ -154,7 +155,6 @@ if menu == "🔍 履歷查詢":
 
     elif menu == "📝 新增維修回報":
         st.title("📝 新增維修履歷")
-        # ... 後面維持不變 ...
         with st.form("add_form", clear_on_submit=True):
             c1, c2, c3 = st.columns(3)
             c_name = c1.text_input("客戶名稱 *")
